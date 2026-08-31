@@ -51,7 +51,7 @@ describe('Products (integration)', () => {
 
     expect(res.body.id).toBeDefined();
     expect(res.body.stock).toBe(5);
-    expect(res.body.price).toBe('12.500000');
+    expect(res.body.price).toBe('12.50');
   });
 
   it('finds products by search term', async () => {
