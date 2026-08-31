@@ -46,18 +46,18 @@ describe('Products (integration)', () => {
   it('creates a product', async () => {
     const res = await request(app.getHttpServer())
       .post('/products')
-      .send({ name: 'T-shirt', price: '12.50', quantity: 5 })
+      .send({ name: 'T-shirt', price: '12.50', stock: 5 })
       .expect(201);
 
     expect(res.body.id).toBeDefined();
-    expect(res.body.quantity).toBe(5);
+    expect(res.body.stock).toBe(5);
     expect(res.body.price).toBe('12.500000');
   });
 
   it('finds products by search term', async () => {
     await request(app.getHttpServer())
       .post('/products')
-      .send({ name: 'Healthy granola', price: '4.00', quantity: 10 })
+      .send({ name: 'Healthy granola', price: '4.00', stock: 10 })
       .expect(201);
 
     const res = await request(app.getHttpServer())
@@ -71,7 +71,7 @@ describe('Products (integration)', () => {
   it('decrements stock atomically and rejects overselling', async () => {
     const created = await request(app.getHttpServer())
       .post('/products')
-      .send({ name: 'Limited item', price: '1.00', quantity: 2 })
+      .send({ name: 'Limited item', price: '1.00', stock: 2 })
       .expect(201);
     const id = created.body.id;
 
@@ -79,10 +79,10 @@ describe('Products (integration)', () => {
     const [a, b] = await Promise.all([
       request(app.getHttpServer())
         .post(`/products/${id}/decrement`)
-        .send({ quantity: 2 }),
+        .send({ stock: 2 }),
       request(app.getHttpServer())
         .post(`/products/${id}/decrement`)
-        .send({ quantity: 2 }),
+        .send({ stock: 2 }),
     ]);
 
     const statuses = [a.status, b.status].sort();
@@ -91,28 +91,28 @@ describe('Products (integration)', () => {
     const after = await request(app.getHttpServer())
       .get(`/products/${id}`)
       .expect(200);
-    expect(after.body.quantity).toBe(0);
+    expect(after.body.stock).toBe(0);
   });
 
   it('restocks a product', async () => {
     const created = await request(app.getHttpServer())
       .post('/products')
-      .send({ name: 'Restockable', price: '2.00', quantity: 0 })
+      .send({ name: 'Restockable', price: '2.00', stock: 0 })
       .expect(201);
     const id = created.body.id;
 
     const res = await request(app.getHttpServer())
       .post(`/products/${id}/restock`)
-      .send({ quantity: 7 })
+      .send({ stock: 7 })
       .expect(201);
 
-    expect(res.body.quantity).toBe(7);
+    expect(res.body.stock).toBe(7);
   });
 
   it('rejects an invalid product (missing price)', async () => {
     await request(app.getHttpServer())
       .post('/products')
-      .send({ name: 'No price', quantity: 1 })
+      .send({ name: 'No price', stock: 1 })
       .expect(400);
   });
 });
