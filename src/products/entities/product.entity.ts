@@ -16,7 +16,7 @@ export class Product {
 
   // "broj komada na raspolaganju" (spec 2.1) — stock on hand.
   @Column('int', { default: 0 })
-  quantity!: number;
+  stock!: number;
 
   // Crypto price. Kept as a string with the same precision/scale the order
   // service uses for money, so totals line up across services without rounding.

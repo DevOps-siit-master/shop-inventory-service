@@ -54,9 +54,9 @@ export class ProductsService {
     const result = await this.products
       .createQueryBuilder()
       .update(Product)
-      .set({ quantity: () => `quantity - ${amount}` })
+      .set({ stock: () => `stock - ${amount}` })
       .where('id = :id', { id })
-      .andWhere('quantity >= :amount', { amount })
+      .andWhere('stock >= :amount', { amount })
       .execute();
 
     if (!result.affected) {
@@ -77,7 +77,7 @@ export class ProductsService {
     const result = await this.products
       .createQueryBuilder()
       .update(Product)
-      .set({ quantity: () => `quantity + ${amount}` })
+      .set({ stock: () => `stock + ${amount}` })
       .where('id = :id', { id })
       .execute();
 
