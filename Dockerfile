@@ -17,4 +17,3 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup && chown -R appuser:a
 USER appuser
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
-
