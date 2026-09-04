@@ -3,7 +3,7 @@ import {
   DecrementResult,
   ProductRepository,
 } from '../product-repository.adapter';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Product } from '../entities/product.entity';
 import { ILike, Repository } from 'typeorm';
 import { CreateProductDto } from '../dto/create-product.dto';
