@@ -16,4 +16,5 @@ export interface ProductRepository {
   remove(id: string): Promise<boolean>;
   decrement(id: string, qty: number): Promise<DecrementResult>;
   restock(id: string, qty: number): Promise<Product | null>;
+  ping(): Promise<void>;
 }

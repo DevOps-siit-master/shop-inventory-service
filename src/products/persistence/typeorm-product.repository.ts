@@ -78,4 +78,8 @@ export class TypeOrmProductRepository implements ProductRepository {
     const updated = await this.findOne(id);
     return updated;
   }
+
+  async ping(): Promise<void> {
+    await this.products.query('SELECT 1');
+  }
 }
