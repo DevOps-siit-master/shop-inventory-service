@@ -72,8 +72,7 @@ export class TypeOrmProductRepository implements ProductRepository {
       .where('id = :id', { id })
       .execute();
 
-    if (!result.affected)
-      throw new NotFoundException(`Product ${id} not found`);
+    if (!result.affected) return null;
 
     const updated = await this.findOne(id);
     return updated;
