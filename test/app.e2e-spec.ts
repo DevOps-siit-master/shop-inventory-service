@@ -1,12 +1,12 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
 import request from 'supertest';
 import { ProductsModule } from '../src/products/products.module';
+import { PersistenceModule } from '../src/products/persistence/persistence.module';
 
 describe('Products (integration)', () => {
   let app: INestApplication;
@@ -14,21 +14,15 @@ describe('Products (integration)', () => {
 
   beforeAll(async () => {
     container = await new PostgreSqlContainer('postgres:16-alpine').start();
+    process.env.DATABASE_KIND = 'postgres';
+    process.env.DATABASE_HOST = container.getHost();
+    process.env.DATABASE_PORT = String(container.getPort());
+    process.env.DATABASE_USER = container.getUsername();
+    process.env.DATABASE_PASSWORD = container.getPassword();
+    process.env.DATABASE_NAME = container.getDatabase();
 
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          host: container.getHost(),
-          port: container.getPort(),
-          username: container.getUsername(),
-          password: container.getPassword(),
-          database: container.getDatabase(),
-          autoLoadEntities: true,
-          synchronize: true,
-        }),
-        ProductsModule,
-      ],
+      imports: [PersistenceModule.register(), ProductsModule],
     }).compile();
 
     app = moduleRef.createNestApplication();
@@ -41,6 +35,7 @@ describe('Products (integration)', () => {
   afterAll(async () => {
     await app?.close();
     await container?.stop();
+    delete process.env.DATABASE_KIND;
   });
 
   it('creates a product', async () => {
