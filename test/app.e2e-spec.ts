@@ -5,8 +5,13 @@ import {
   StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import { ProductsModule } from '../src/products/products.module';
 import { PersistenceModule } from '../src/products/persistence/persistence.module';
+
+const adminToken = () =>
+  jwt.sign({ sub: 'test-admin', role: 'shop_owner' }, 'test-secret');
+const asAdmin = () => ({ Authorization: `Bearer ${adminToken()}` });
 
 describe('Products (integration)', () => {
   let app: INestApplication;
@@ -20,6 +25,7 @@ describe('Products (integration)', () => {
     process.env.DATABASE_USER = container.getUsername();
     process.env.DATABASE_PASSWORD = container.getPassword();
     process.env.DATABASE_NAME = container.getDatabase();
+    process.env.JWT_ACCESS_SECRET = 'test-secret';
 
     const moduleRef = await Test.createTestingModule({
       imports: [PersistenceModule.register(), ProductsModule],
@@ -41,6 +47,7 @@ describe('Products (integration)', () => {
   it('creates a product', async () => {
     const res = await request(app.getHttpServer())
       .post('/products')
+      .set(asAdmin())
       .send({ name: 'T-shirt', price: '12.50', stock: 5 })
       .expect(201);
 
@@ -52,6 +59,7 @@ describe('Products (integration)', () => {
   it('finds products by search term', async () => {
     await request(app.getHttpServer())
       .post('/products')
+      .set(asAdmin())
       .send({ name: 'Healthy granola', price: '4.00', stock: 10 })
       .expect(201);
 
@@ -66,6 +74,7 @@ describe('Products (integration)', () => {
   it('decrements stock atomically and rejects overselling', async () => {
     const created = await request(app.getHttpServer())
       .post('/products')
+      .set(asAdmin())
       .send({ name: 'Limited item', price: '1.00', stock: 2 })
       .expect(201);
     const id = created.body.id;
@@ -92,12 +101,14 @@ describe('Products (integration)', () => {
   it('restocks a product', async () => {
     const created = await request(app.getHttpServer())
       .post('/products')
+      .set(asAdmin())
       .send({ name: 'Restockable', price: '2.00', stock: 0 })
       .expect(201);
     const id = created.body.id;
 
     const res = await request(app.getHttpServer())
       .post(`/products/${id}/restock`)
+      .set(asAdmin())
       .send({ stock: 7 })
       .expect(201);
 
@@ -107,6 +118,7 @@ describe('Products (integration)', () => {
   it('rejects an invalid product (missing price)', async () => {
     await request(app.getHttpServer())
       .post('/products')
+      .set(asAdmin())
       .send({ name: 'No price', stock: 1 })
       .expect(400);
   });
