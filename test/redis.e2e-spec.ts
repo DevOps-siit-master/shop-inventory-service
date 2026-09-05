@@ -2,11 +2,16 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import {
   PersistenceModule,
   REDIS_CLIENT,
 } from '../src/products/persistence/persistence.module';
 import { ProductsModule } from '../src/products/products.module';
+
+const adminToken = () =>
+  jwt.sign({ sub: 'test-admin', role: 'shop_owner' }, 'test-secret');
+const asAdmin = () => ({ Authorization: `Bearer ${adminToken()}` });
 
 describe('Products (integration, Redis)', () => {
   let app: INestApplication;
@@ -18,6 +23,7 @@ describe('Products (integration, Redis)', () => {
     process.env.DATABASE_KIND = 'redis';
     process.env.DATABASE_HOST = container.getHost();
     process.env.DATABASE_PORT = String(container.getMappedPort(6379));
+    process.env.JWT_ACCESS_SECRET = 'test-secret';
 
     const moduleRef = await Test.createTestingModule({
       imports: [PersistenceModule.register(), ProductsModule],
@@ -44,6 +50,7 @@ describe('Products (integration, Redis)', () => {
   it('creates a product', async () => {
     const res = await request(app.getHttpServer())
       .post('/products')
+      .set(asAdmin())
       .send({ name: 'T-shirt', price: '12.50', stock: 5 })
       .expect(201);
     expect(res.body.id).toBeDefined();
@@ -53,6 +60,7 @@ describe('Products (integration, Redis)', () => {
   it('rejects overselling under concurrency', async () => {
     const created = await request(app.getHttpServer())
       .post('/products')
+      .set(asAdmin())
       .send({ name: 'Limited', price: '1.00', stock: 2 })
       .expect(201);
     const id = created.body.id;

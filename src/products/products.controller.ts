@@ -14,9 +14,9 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { AdjustStockDto } from './dto/adjust-stock.dto';
-import { Roles } from 'src/auth/roles.decorator';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Controller('products')
 export class ProductsController {
